@@ -1,0 +1,36 @@
+/* Parallel Scroll Effect */
+.hero-section {
+    background-image: url('../img/clubs-background.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Parallel effect */
+    height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.hero-section h1,
+.hero-section p {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.content-section {
+    background-color: #f8f9fa;
+}
+
+/* General Card Styling */
+.card-blog img {
+    transition: transform 0.3s ease-in-out;
+}
+
+.card-blog img:hover {
+    transform: scale(1.05);
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, #6a11cb, #2575fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
