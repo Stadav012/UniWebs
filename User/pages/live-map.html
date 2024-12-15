@@ -628,7 +628,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-social"
-                                        value="Social"
+                                        value="social"
                                         checked
                                     />
                                     <label
@@ -642,7 +642,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-academic"
-                                        value="Academic"
+                                        value="academic"
                                         checked
                                     />
                                     <label
@@ -656,7 +656,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-sports"
-                                        value="Sports"
+                                        value="sports"
                                         checked
                                     />
                                     <label
@@ -670,7 +670,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-others"
-                                        value="Others"
+                                        value="others"
                                         checked
                                     />
                                     <label
@@ -706,44 +706,39 @@
                     }
                 ).addTo(map);
 
-                // Sample event data
-                const events = [
-                    {
-                        id: 1,
-                        name: 'Social Mixer',
-                        type: 'Social',
-                        description: 'Meet new people at the student lounge!',
-                        coordinates: [5.758055395845746, -0.21743274591091627],
-                    },
-                    {
-                        id: 2,
-                        name: 'Math Workshop',
-                        type: 'Academic',
-                        description:
-                            'Improve your calculus skills in the Engineering Block.',
-                        coordinates: [5.7641, -0.2193],
-                    },
-                    {
-                        id: 3,
-                        name: 'Football Match',
-                        type: 'Sports',
-                        description: 'Join the fun at the soccer field.',
-                        coordinates: [5.7629, -0.2179],
-                    },
-                    {
-                        id: 4,
-                        name: 'Art Exhibition',
-                        type: 'Others',
-                        description:
-                            'Explore art by local talents at the Atrium.',
-                        coordinates: [5.7638, -0.2185],
-                    },
-                ];
+                // Function to fetch events from the backend
+                const fetchEvents = async () => {
+                    try {
+                        console.log('Fetching events...'); // Debug log to confirm if the function is called
+                        const response = await fetch(
+                            'http://localhost/UniWebs/backend/users/events/get_events.php'
+                        );
+                        const events = await response.json();
+                        console.log(events); // Log events returned from the server
+                        return events;
+                    } catch (error) {
+                        console.error('Error fetching events:', error);
+                        return [];
+                    }
+                };
+
+                // Define color for each event type
+                const eventTypeColors = {
+                    academic: 'blue',
+                    social: 'green',
+                    sports: 'red',
+                    others: 'purple',
+                };
 
                 // Markers and Layers
                 let markers = [];
 
-                const updateMap = () => {
+                const updateMap = async () => {
+                    console.log('Updating map...'); // Log to check if updateMap is being called
+
+                    // Fetch events
+                    const events = await fetchEvents();
+
                     // Clear existing markers
                     markers.forEach((marker) => map.removeLayer(marker));
                     markers = [];
@@ -755,24 +750,85 @@
                         )
                     ).map((input) => input.value);
 
+                    // Log events for debugging
+                    console.log('Fetched events:', events);
+
                     // Add filtered events to the map
                     events
-                        .filter((event) => selectedFilters.includes(event.type))
+                        .filter((event) =>
+                            selectedFilters.includes(event.event_type)
+                        )
                         .forEach((event) => {
-                            const marker = L.marker(event.coordinates).addTo(
-                                map
+                            // Log event data and coordinates
+                            console.log(
+                                `Adding event: ${event.name} at ${event.location_lat}, ${event.location_lng}`
                             );
-                            marker.bindPopup(`
-                        <h6>${event.name}</h6>
-                        <p>${event.description}</p>
-                        <p><strong>Type:</strong> ${event.type}</p>
-                    `);
-                            markers.push(marker);
+
+                            const lat = parseFloat(event.location_lat);
+                            const lng = parseFloat(event.location_lng);
+
+                            // Ensure lat and lng are valid numbers
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                // Get the color for this event type
+                                const markerColor =
+                                    eventTypeColors[event.event_type] || 'gray'; // Default to gray if type not found
+
+                                // Create a circle marker with the selected color
+                                const marker = L.circleMarker([lat, lng], {
+                                    radius: 8,
+                                    fillColor: markerColor,
+                                    color: markerColor,
+                                    weight: 2,
+                                    opacity: 1,
+                                    fillOpacity: 0.7,
+                                }).addTo(map);
+
+                                // Bind popup with event information
+                                marker.bindPopup(`
+                            <h6>${event.name}</h6>
+                            <p>${event.description}</p>
+                            <p><strong>Type:</strong> ${event.event_type}</p>
+                            <p><strong>Start Time:</strong> ${event.start_time}</p>
+                            <p><strong>End Time:</strong> ${event.end_time}</p>
+                        `);
+                                markers.push(marker);
+                            } else {
+                                console.warn(
+                                    `Invalid coordinates for event: ${event.name}`
+                                );
+                            }
                         });
+                };
+
+                // Add a legend to the map
+                const createLegend = () => {
+                    const legend = L.control({ position: 'topright' });
+
+                    legend.onAdd = function () {
+                        const div = L.DomUtil.create('div', 'info legend');
+                        const labels = [];
+                        for (const eventType in eventTypeColors) {
+                            labels.push(
+                                `<span style="background-color: ${
+                                    eventTypeColors[eventType]
+                                }; width: 20px; height: 20px; display: inline-block;"></span> ${
+                                    eventType.charAt(0).toUpperCase() +
+                                    eventType.slice(1)
+                                }`
+                            );
+                        }
+                        div.innerHTML = labels.join('<br>');
+                        return div;
+                    };
+
+                    legend.addTo(map);
                 };
 
                 // Initial load
                 updateMap();
+
+                // Create and add the legend
+                createLegend();
 
                 // Update map when filters change
                 document

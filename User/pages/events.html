@@ -634,6 +634,14 @@
                 // Select the calendar element
                 var calendarEl = document.getElementById('full-calendar');
 
+                // Define colors for different event types
+                const eventTypeColors = {
+                    academic: 'blue',
+                    social: 'green',
+                    sports: 'red',
+                    others: 'purple',
+                };
+
                 // Initialize the calendar
                 var calendar = new FullCalendar.Calendar(calendarEl, {
                     initialView: 'dayGridMonth', // Month view
@@ -642,41 +650,65 @@
                         center: 'title',
                         right: 'dayGridMonth,timeGridWeek,timeGridDay',
                     },
-                    events: [
-                        {
-                            title: 'Art Exhibition',
-                            start: '2024-12-18',
-                            description:
-                                'Join us for a showcase of creative works from our art club.',
-                            location: 'Art Gallery Hall',
-                        },
-                        {
-                            title: 'Tech Talk',
-                            start: '2024-12-20',
-                            description: 'A deep dive into AI innovations.',
-                            location: 'Auditorium',
-                        },
-                        {
-                            title: 'Eco Walk',
-                            start: '2024-12-22',
-                            description: 'Promoting sustainability on campus.',
-                            location: 'Central Park',
-                        },
-                        {
-                            title: 'Music Concert',
-                            start: '2024-12-24',
-                            description:
-                                'A night of live music and performances.',
-                            location: 'Amphitheater',
-                        },
+                    events: async function (
+                        info,
+                        successCallback,
+                        failureCallback
+                    ) {
+                        try {
+                            // Fetch events from the backend
+                            const response = await fetch(
+                                'http://localhost/UniWebs/backend/users/events/get_events.php'
+                            );
+                            const events = await response.json();
 
-                        {
-                            title: 'Sports Day',
-                            start: '2024-12-26',
-                            description: 'Cheer on your favorite teams.',
-                            location: 'Sports Complex',
-                        },
-                    ],
+                            // Format events for FullCalendar
+                            const calendarEvents = events.map((event) => ({
+                                title: event.name,
+                                start: event.start_time,
+                                description: event.description,
+                                location:
+                                    event.location_lat +
+                                    ', ' +
+                                    event.location_lng, // Concatenate lat, lng for location
+                                eventType: event.event_type, // Add event type for styling
+                            }));
+
+                            // Pass events to FullCalendar
+                            successCallback(calendarEvents);
+                        } catch (error) {
+                            console.error('Error fetching events:', error);
+                            failureCallback(error);
+                        }
+                    },
+                    eventContent: function (info) {
+                        // Custom rendering of event content
+                        const eventType = info.event.extendedProps.eventType;
+                        const eventColor = eventTypeColors[eventType] || 'gray'; // Default to gray if type not found
+
+                        // Create a pill-style div for the event
+                        const pill = document.createElement('div');
+                        pill.className = 'event-pill';
+                        pill.style.backgroundColor = eventColor;
+                        pill.style.borderRadius = '50px'; // Rounded pill shape
+                        pill.style.padding = '5px 7px'; // Add padding
+                        pill.style.color = '#fff'; // Text color inside the pill
+                        pill.style.fontWeight = 'bold'; // Make text bold
+                        pill.style.textAlign = 'center'; // Center the text inside the pill
+                        pill.style.fontSize = '0.7rem'; // Smaller font size
+                        pill.style.width = '100%';
+                        pill.style.height = '100%';
+                        pill.style.overflow = 'hidden';
+                        pill.style.textOverflow = 'ellipsis';
+                        pill.style.whiteSpace = 'nowrap';
+                        pill.style.cursor = 'pointer'; // Add pointer cursor on hover
+                        pill.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)'; // Add shadow
+                        pill.style.transition = 'all 0.2s'; // Add smooth transition
+                        pill.innerText = info.event.title; // Set the event title
+
+                        // Return the custom pill content
+                        return { domNodes: [pill] };
+                    },
                     eventClick: function (info) {
                         // Show event details on click
                         alert(

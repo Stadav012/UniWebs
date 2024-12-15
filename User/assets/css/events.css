@@ -1,6 +1,6 @@
 /* Hero Section Styling */
 .hero-section {
-    background-image: url('../assets/img/events-background.jpg');
+    background-image: url('../img/BG.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -18,4 +18,39 @@
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Base styles for event pills */
+.event-pill {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+    font-size: 14px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Event type colors */
+.event-pill.academic {
+    background-color: #007bff; /* Blue */
+}
+
+.event-pill.social {
+    background-color: #28a745; /* Green */
+}
+
+.event-pill.sports {
+    background-color: #dc3545; /* Red */
+}
+
+.event-pill.others {
+    background-color: #6f42c1; /* Purple */
+}
+
+/* Optional: Add hover effect */
+.event-pill:hover {
+    opacity: 0.8;
+    cursor: pointer;
 }

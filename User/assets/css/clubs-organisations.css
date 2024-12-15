@@ -1,6 +1,6 @@
 /* Parallel Scroll Effect */
 .hero-section {
-    background-image: url('../img/clubs-background.jpg');
+    background-image: url('../img/BG.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Parallel effect */
