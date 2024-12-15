@@ -630,7 +630,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-study"
-                                        value="Study"
+                                        value="study"
                                         checked
                                     />
                                     <label
@@ -644,7 +644,7 @@
                                         type="checkbox"
                                         class="form-check-input"
                                         id="filter-social"
-                                        value="Social"
+                                        value="social"
                                         checked
                                     />
                                     <label
@@ -654,19 +654,19 @@
                                     >
                                 </div>
                                 <div class="form-check mb-2">
-                                    <label for="min-rating" class="form-label"
-                                        >Minimum Rating:</label
+                                    <label for="min-likes" class="form-label"
+                                        >Minimum Likes:</label
                                     >
                                     <input
                                         type="range"
                                         class="form-range"
-                                        id="min-rating"
-                                        min="1"
-                                        max="5"
-                                        value="3"
+                                        id="min-likes"
+                                        min="0"
+                                        max="100"
+                                        value="0"
                                     />
-                                    <span id="rating-value" class="text-muted"
-                                        >3</span
+                                    <span id="likes-value" class="text-muted"
+                                        >0</span
                                     >
                                 </div>
                             </form>
@@ -716,16 +716,26 @@
                                     ></textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="spot-rating" class="form-label"
-                                        >Rating:</label
+                                    <label for="spot-lat" class="form-label"
+                                        >Location:</label
                                     >
                                     <input
-                                        type="number"
-                                        id="spot-rating"
+                                        type="text"
+                                        id="spot-lat"
                                         class="form-control"
-                                        min="1"
-                                        max="5"
-                                        placeholder="1 to 5"
+                                        placeholder="Latitude"
+                                        required
+                                    />
+                                </div>
+                                <div class="mb-3">
+                                    <label for="spot-lng" class="form-label"
+                                        >&nbsp;</label
+                                    >
+                                    <input
+                                        type="text"
+                                        id="spot-lng"
+                                        class="form-control"
+                                        placeholder="Longitude"
                                         required
                                     />
                                 </div>
@@ -775,88 +785,82 @@
                 </div>
             </div>
         </main>
-
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // Sample hot spots data with coordinates
-                let spots = [
-                    {
-                        id: 1,
-                        name: 'Library Rooftop',
-                        type: 'Study',
-                        description:
-                            'Quiet with a great view. Perfect for late-night study.',
-                        rating: 5,
-                        coordinates: { lat: 5.8191, lng: -0.1336 }, // Ashesi location example
-                    },
-                    {
-                        id: 2,
-                        name: 'Student Lounge',
-                        type: 'Social',
-                        description:
-                            'Lively atmosphere, great for making friends.',
-                        rating: 4,
-                        coordinates: { lat: 5.8185, lng: -0.1329 },
-                    },
-                ];
-
                 const spotCardsContainer =
                     document.getElementById('hot-spot-cards');
                 const spotLocationModal = new bootstrap.Modal(
                     document.getElementById('spotLocationModal')
                 );
-                let map;
-                let marker;
+                const filterForm = document.getElementById('spot-filters');
+                const postHotspotForm =
+                    document.getElementById('add-spot-form');
+                const spotLocationMap = document.getElementById('map');
+                let map, marker;
 
                 // Function to initialize the map
                 const initializeMap = (lat, lng) => {
                     if (!map) {
                         map = L.map('map').setView([lat, lng], 16);
-
-                        // Add OpenStreetMap tiles
                         L.tileLayer(
                             'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            {
-                                attribution:
-                                    '&copy; OpenStreetMap contributors',
-                            }
+                            { attribution: '&copy; OpenStreetMap contributors' }
                         ).addTo(map);
-
-                        // Add marker
                         marker = L.marker([lat, lng]).addTo(map);
                     } else {
-                        // Update map position and marker
                         map.setView([lat, lng], 16);
                         marker.setLatLng([lat, lng]);
                     }
+
+                    // Ensure the map size is recalculated correctly after the modal is shown
+                    setTimeout(() => {
+                        map.invalidateSize();
+                    }, 300); // Delay slightly to ensure the modal is fully visible
                 };
 
-                // Function to render spots
-                const renderSpots = () => {
-                    spotCardsContainer.innerHTML = '';
+                // Trigger map resizing on modal show
+                document
+                    .getElementById('spotLocationModal')
+                    .addEventListener('shown.bs.modal', function () {
+                        if (map) {
+                            map.invalidateSize(); // Fix grey background issue
+                        }
+                    });
 
+                // Function to render spots
+                const renderSpots = (spots) => {
+                    spotCardsContainer.innerHTML = '';
                     spots.forEach((spot) => {
                         const card = `
-                    <div class="col-md-6 col-lg-4 mb-4">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h5 class="card-title">${spot.name}</h5>
-                                <h6 class="text-muted">${spot.type} Spot</h6>
-                                <p class="card-text">${spot.description}</p>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="badge bg-primary">Rating: ${spot.rating}</span>
-                                    <button
-                                        class="btn btn-sm btn-outline-primary view-location"
-                                        data-lat="${spot.coordinates.lat}"
-                                        data-lng="${spot.coordinates.lng}"
-                                    >
-                                        View
-                                    </button>
-                                </div>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">${spot.name}</h5>
+                            <h6 class="text-muted">${
+                                spot.spot_type.charAt(0).toUpperCase() +
+                                spot.spot_type.slice(1)
+                            } Spot</h6>
+                            <p class="card-text">${spot.description}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-sm like-button" data-id="${
+                                    spot.spot_id
+                                }" data-likes="${
+                            spot.likes_count
+                        }" data-liked="${spot.has_liked ? 'true' : 'false'}">
+                                    ${spot.has_liked ? '❤️' : '🤍'} ${
+                            spot.likes_count
+                        }
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary view-location" data-lat="${
+                                    spot.location_lat
+                                }" data-lng="${spot.location_lng}">
+                                    View
+                                </button>
                             </div>
                         </div>
                     </div>
-                `;
+                </div>
+            `;
                         spotCardsContainer.insertAdjacentHTML(
                             'beforeend',
                             card
@@ -874,15 +878,186 @@
                                 const lng = parseFloat(
                                     this.getAttribute('data-lng')
                                 );
+                                initializeMap(lat, lng);
+                                spotLocationModal.show();
+                            });
+                        });
 
-                                initializeMap(lat, lng); // Initialize or update map
-                                spotLocationModal.show(); // Show modal
+                    // Attach event listeners to Like buttons
+                    document
+                        .querySelectorAll('.like-button')
+                        .forEach((button) => {
+                            button.addEventListener('click', async function () {
+                                const spotId = this.getAttribute('data-id');
+                                const currentLikes = parseInt(
+                                    this.getAttribute('data-likes')
+                                );
+                                const liked =
+                                    this.getAttribute('data-liked') === 'true'; // Check if it's currently liked
+                                const newLikes = liked
+                                    ? currentLikes - 1
+                                    : currentLikes + 1;
+
+                                // Optimistic UI update: change the button state immediately
+                                this.setAttribute('data-likes', newLikes);
+                                this.setAttribute('data-liked', !liked);
+                                this.innerHTML = `${
+                                    liked ? '🤍' : '❤️'
+                                } ${newLikes}`;
+
+                                try {
+                                    // Send like toggle request to backend
+                                    const response = await fetch(
+                                        'http://localhost/UniWebs/backend/users/hot_spots/toggle_hot_spot_like.php',
+                                        {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type':
+                                                    'application/json',
+                                            },
+                                            body: JSON.stringify({
+                                                spot_id: spotId,
+                                                liked: !liked,
+                                            }),
+                                        }
+                                    );
+
+                                    const data = await response.json();
+                                    if (data.success) {
+                                        // If backend confirms success, the like count is correct
+                                        this.innerHTML = `${
+                                            !liked ? '❤️' : '🤍'
+                                        } ${newLikes}`;
+                                    } else {
+                                        // If there was an error, revert the button state
+                                        this.setAttribute(
+                                            'data-likes',
+                                            currentLikes
+                                        );
+                                        this.setAttribute('data-liked', liked);
+                                        this.innerHTML = `${
+                                            liked ? '❤️' : '🤍'
+                                        } ${currentLikes}`;
+                                        alert(data.message); // Show alert if something went wrong
+                                    }
+                                } catch (error) {
+                                    console.error(
+                                        'Error toggling like:',
+                                        error
+                                    );
+                                    // Revert the button state in case of error
+                                    this.setAttribute(
+                                        'data-likes',
+                                        currentLikes
+                                    );
+                                    this.setAttribute('data-liked', liked);
+                                    this.innerHTML = `${
+                                        liked ? '❤️' : '🤍'
+                                    } ${currentLikes}`;
+                                }
                             });
                         });
                 };
 
-                // Initial render
-                renderSpots();
+                // Fetch hotspots from the backend with optional filters
+                const fetchHotspots = async (filters = {}) => {
+                    try {
+                        const response = await fetch(
+                            'http://localhost/UniWebs/backend/users/hot_spots/get_hot_spots.php',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify(filters),
+                            }
+                        );
+                        const spots = await response.json();
+                        renderSpots(spots);
+                    } catch (error) {
+                        console.error('Error fetching hotspots:', error);
+                    }
+                };
+
+                // Handle filter form submission
+                filterForm?.addEventListener('change', function () {
+                    const filters = {
+                        types: [],
+                        minLikes: document.getElementById('min-likes').value,
+                    };
+
+                    // Collect selected spot types
+                    document
+                        .querySelectorAll('.form-check-input:checked')
+                        .forEach((checkbox) => {
+                            filters.types.push(checkbox.value);
+                        });
+
+                    fetchHotspots(filters); // Pass filters to the fetch function
+                });
+
+                // Initial fetch of hotspots (with default filters)
+                fetchHotspots();
+
+                // Update the slider value display when the slider is moved
+                const minLikesSlider = document.getElementById('min-likes');
+                const likesValueSpan = document.getElementById('likes-value');
+
+                // Set the initial value of the slider and the span
+                likesValueSpan.textContent = minLikesSlider.value;
+
+                // Update the value in the span when the slider is moved
+                minLikesSlider.addEventListener('input', function () {
+                    likesValueSpan.textContent = minLikesSlider.value;
+                });
+
+                // Post Hotspot Form handling
+                postHotspotForm?.addEventListener(
+                    'submit',
+                    async function (event) {
+                        event.preventDefault();
+
+                        const data = {
+                            name: document.getElementById('spot-name').value,
+                            spot_type:
+                                document.getElementById('spot-type').value,
+                            description:
+                                document.getElementById('spot-description')
+                                    .value,
+                            location_lat: parseFloat(
+                                document.getElementById('spot-lat').value
+                            ),
+                            location_lng: parseFloat(
+                                document.getElementById('spot-lng').value
+                            ),
+                        };
+
+                        try {
+                            const response = await fetch(
+                                'http://localhost/UniWebs/backend/users/hot_spots/post_hot_spots.php',
+                                {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify(data),
+                                }
+                            );
+                            const result = await response.json();
+                            if (
+                                result.message === 'Hot spot added successfully'
+                            ) {
+                                alert('Hotspot posted successfully!');
+                                postHotspotForm.reset(); // Reset the form after successful submission
+                                fetchHotspots(); // Re-fetch hotspots to include the newly posted one
+                            } else {
+                                alert(
+                                    'Failed to post hotspot: ' + result.message
+                                );
+                            }
+                        } catch (error) {
+                            console.error('Error posting hotspot:', error);
+                        }
+                    }
+                );
             });
         </script>
 

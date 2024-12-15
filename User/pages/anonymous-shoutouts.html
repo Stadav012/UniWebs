@@ -607,30 +607,7 @@
                     <div class="col-md-4">
                         <h4>Select a Room</h4>
                         <ul class="list-group" id="room-list">
-                            <li
-                                class="list-group-item room-item active"
-                                data-room="General"
-                            >
-                                General
-                            </li>
-                            <li
-                                class="list-group-item room-item"
-                                data-room="Sports"
-                            >
-                                Sports
-                            </li>
-                            <li
-                                class="list-group-item room-item"
-                                data-room="Technology"
-                            >
-                                Technology
-                            </li>
-                            <li
-                                class="list-group-item room-item"
-                                data-room="Music"
-                            >
-                                Music
-                            </li>
+                            <!-- Rooms will be dynamically populated here -->
                         </ul>
                     </div>
 
@@ -666,60 +643,143 @@
         </main>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-                const roomList = document.querySelectorAll('.room-item');
-                const roomTitle = document.querySelector('.room-title');
-                const chatBody = document.getElementById('chat-body');
-                const chatInput = document.getElementById('chat-input');
-                const sendBtn = document.getElementById('send-btn');
+            let currentRoomId = null;
 
-                let currentRoom = 'General';
-                let messages = {
-                    General: [],
-                    Sports: [],
-                    Technology: [],
-                    Music: [],
-                };
+            // Fetch and populate rooms
+            async function fetchRooms() {
+                try {
+                    const response = await fetch(
+                        'http://localhost/UniWebs/backend/users/chat_rooms/get_chat_rooms.php'
+                    ); // Backend endpoint for fetching rooms
+                    const rooms = await response.json(); // Parse JSON response
+                    populateRooms(rooms);
+                } catch (error) {
+                    console.error('Error fetching rooms:', error);
+                }
+            }
 
-                // Switch room
-                roomList.forEach((room) => {
-                    room.addEventListener('click', function () {
-                        document
-                            .querySelector('.room-item.active')
-                            .classList.remove('active');
-                        this.classList.add('active');
-                        currentRoom = this.dataset.room;
-                        roomTitle.textContent = `Room: ${currentRoom}`;
-                        renderMessages();
-                    });
-                });
+            // Populate room list dynamically
+            function populateRooms(rooms) {
+                const roomList = document.getElementById('room-list');
+                roomList.innerHTML = ''; // Clear existing rooms
 
-                // Send message
-                sendBtn.addEventListener('click', function () {
-                    const message = chatInput.value.trim();
-                    if (message) {
-                        messages[currentRoom].push({
-                            sender: 'Anonymous',
-                            text: message,
-                        });
-                        chatInput.value = '';
-                        renderMessages();
+                rooms.forEach((room, index) => {
+                    const roomItem = document.createElement('li');
+                    roomItem.className = `list-group-item room-item ${
+                        index === 0 ? 'active' : ''
+                    }`;
+                    roomItem.dataset.roomId = room.room_id; // Attach room ID
+                    roomItem.textContent = room.name; // Set room name
+                    roomList.appendChild(roomItem);
+
+                    // Set the first room as the default
+                    if (index === 0) {
+                        currentRoomId = room.room_id;
+                        document.querySelector(
+                            '.room-title'
+                        ).textContent = `Room: ${room.name}`;
+                        fetchMessages(currentRoomId);
                     }
                 });
 
-                // Render messages
-                function renderMessages() {
-                    chatBody.innerHTML = '';
-                    messages[currentRoom].forEach((msg) => {
-                        const messageElement = document.createElement('div');
-                        messageElement.className = 'message';
-                        messageElement.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
-                        chatBody.appendChild(messageElement);
-                    });
-                    chatBody.scrollTop = chatBody.scrollHeight;
-                }
+                // Attach click event listeners for switching rooms
+                attachRoomSwitchListeners();
+            }
 
-                renderMessages();
+            // Attach event listeners to room items
+            function attachRoomSwitchListeners() {
+                const roomItems = document.querySelectorAll('.room-item');
+                roomItems.forEach((item) => {
+                    item.addEventListener('click', function () {
+                        document
+                            .querySelector('.room-item.active')
+                            .classList.remove('active'); // Remove active
+                        this.classList.add('active'); // Add active to clicked room
+                        currentRoomId = this.dataset.roomId; // Update current room
+                        document.querySelector(
+                            '.room-title'
+                        ).textContent = `Room: ${this.textContent}`; // Update title
+                        fetchMessages(currentRoomId); // Fetch messages for the selected room
+                    });
+                });
+            }
+
+            // Fetch messages for the current room
+            async function fetchMessages(roomId) {
+                try {
+                    const response = await fetch(
+                        `http://localhost/UniWebs/backend/users/chat_messages/get_chat_messages.php?room_id=${roomId}`
+                    ); // Backend endpoint
+                    const messages = await response.json(); // Parse JSON response
+                    renderMessages(messages);
+                } catch (error) {
+                    console.error('Error fetching messages:', error);
+                }
+            }
+
+            // Render messages in the chat window
+            function renderMessages(messages) {
+                const chatBody = document.getElementById('chat-body');
+                chatBody.innerHTML = ''; // Clear existing messages
+
+                messages.forEach((msg) => {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message mb-2';
+                    const color = msg.is_anonymous ? '#000000' : msg.user_color; // Black for anonymous users
+                    messageElement.innerHTML = `
+                <div style="color: ${color};">
+                    <strong>${
+                        msg.is_anonymous ? 'Anonymous' : `${msg.username}`
+                    }:</strong> ${msg.content}
+                </div>`;
+                    chatBody.appendChild(messageElement);
+                });
+
+                chatBody.scrollTop = chatBody.scrollHeight; // Scroll to the bottom
+            }
+
+            // Send message functionality
+            async function sendMessage() {
+                const chatInput = document.getElementById('chat-input');
+                const messageContent = chatInput.value.trim();
+
+                if (messageContent === '') return; // Prevent empty messages
+
+                try {
+                    const response = await fetch(
+                        'http://localhost/UniWebs/backend/users/chat_messages/post_chat_messages.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                room_id: currentRoomId,
+                                content: messageContent,
+                            }),
+                        }
+                    );
+
+                    const result = await response.json();
+                    if (result.success) {
+                        chatInput.value = ''; // Clear input field
+                        fetchMessages(currentRoomId); // Refresh messages
+                    } else {
+                        console.error('Error sending message:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                }
+            }
+
+            // Initialize the chat app
+            document.addEventListener('DOMContentLoaded', function () {
+                fetchRooms(); // Load rooms on page load
+
+                // Attach send button functionality
+                document
+                    .getElementById('send-btn')
+                    .addEventListener('click', sendMessage);
             });
         </script>
 
