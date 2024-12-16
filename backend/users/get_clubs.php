@@ -10,8 +10,8 @@ $user_id = $_SESSION['user_id'];
 $query = "
     SELECT c.club_id, c.name, c.description, c.club_type
     FROM clubs c
-    INNER JOIN engagement_logs el ON c.club_id = el.details
-    WHERE el.user_id = ? AND el.action_type = 'club_joined'
+    JOIN club_memberships cm ON c.club_id = cm.club_id
+    WHERE cm.user_id = ?;   
 ";
 
 $stmt = $conn->prepare($query);

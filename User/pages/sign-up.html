@@ -33,6 +33,22 @@
             href="../assets/css/soft-ui-dashboard.css?v=1.0.3"
             rel="stylesheet"
         />
+
+        <script>
+            fetch(
+                'http://169.239.251.102:3341/~stanley.ndlovu/UniWebs/backend/users/session_check.php'
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.logged_in) {
+                        // Redirect to dashboard if already logged in
+                        window.location.href = 'dashboard.html';
+                    }
+                })
+                .catch((error) =>
+                    console.error('Error checking session:', error)
+                );
+        </script>
     </head>
 
     <body class="g-sidenav-show bg-gray-100">
@@ -177,7 +193,7 @@
 
                     // Send data using Fetch API (AJAX)
                     fetch(
-                        'http://localhost/UniWebs/backend/users/register.php',
+                        'http://169.239.251.102:3341/~stanley.ndlovu/UniWebs/backend/users/register.php',
                         {
                             method: 'POST',
                             headers: {

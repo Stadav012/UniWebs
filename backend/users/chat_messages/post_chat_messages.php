@@ -6,6 +6,8 @@ include('../db.php');
 
 $data = json_decode(file_get_contents("php://input"), true);
 
+
+
 if (!isset($data['room_id'], $data['content'], $data['is_anonymous'])) {
     echo json_encode(["message" => "Missing required fields"]);
     exit();

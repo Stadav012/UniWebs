@@ -3,11 +3,17 @@
     background-color: #f9f9f9;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.065);
+    height: 100vh; /* Make it span the full viewport height */
 }
 
 /* Room List */
 #room-list {
     cursor: pointer;
+    max-height: 80vh; /* Limit height of the room list */
+    overflow-y: auto; /* Enable scrolling for long lists */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
 }
 
 .room-item.active {
@@ -18,18 +24,17 @@
 
 /* Chat Window */
 .chat-window {
-    height: 400px;
+    height: 90vh; /* Make the chat window taller */
     display: flex;
     flex-direction: column;
 }
 
 .chat-body {
-    flex-grow: 1;
-    overflow-y: auto;
+    flex-grow: 1; /* Allow the chat body to grow and fill space */
+    overflow-y: auto; /* Enable scrolling for messages */
     padding: 10px;
-    background-color: #ffffff;
-    border-top: 1px solid #dee2e6;
-    border-bottom: 1px solid #dee2e6;
+    background-color: #f9f9f9; /* Subtle background for contrast */
+    border-bottom: 1px solid #ddd;
 }
 
 .message {
@@ -56,4 +61,9 @@
 #send-btn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+}
+
+.card-footer {
+    padding: 10px;
+    border-top: 1px solid #ddd;
 }

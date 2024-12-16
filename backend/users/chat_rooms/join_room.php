@@ -12,9 +12,12 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Get the room_id from the request
-if (isset($_POST['room_id'])) {
-    $room_id = $_POST['room_id'];
+// Get the room_id from the json payload
+$json = file_get_contents('php://input');
+$data = json_decode($json, true);
+
+if (isset($data['room_id'])) {
+    $room_id = $data['room_id'];
 } else {
     echo json_encode(["error" => "Room ID not provided"]);
     exit();

@@ -13,39 +13,84 @@ if (!isset($_SESSION['user_id'])) {
 $user_id = $_SESSION['user_id'];
 $data = json_decode(file_get_contents("php://input"), true);
 
-// Check if any fields to update are provided
+// Check if required fields are provided
+if (empty($data['current_password'])) {
+    echo json_encode(["message" => "Current password is required"]);
+    exit();
+}
+
+$current_password = $data['current_password'];
+
+// Fetch current password hash from database
+$query = "SELECT password_hash FROM users WHERE user_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
+
+if (!$user || !password_verify($current_password, $user['password_hash'])) {
+    echo json_encode(["message" => "Invalid current password"]);
+    exit();
+}
+
+// Fields to update
 $fields_to_update = [];
+$bind_types = "";
+$bind_values = [];
 
-if (isset($data['username'])) {
-    $fields_to_update[] = "username = '" . $data['username'] . "'";
+// Update username
+if (isset($data['username']) && !empty($data['username'])) {
+    $fields_to_update[] = "username = ?";
+    $bind_types .= "s";
+    $bind_values[] = $data['username'];
 }
 
-if (isset($data['email'])) {
-    $fields_to_update[] = "email = '" . $data['email'] . "'";
-}
-if (isset($data['role'])) {
-    $fields_to_update[] = "role = '" . $data['role'] . "'";
-}
-
-if (isset($data['engagement_score'])) {
-    $fields_to_update[] = "engagement_score = " . $data['engagement_score'];
+// Update email
+if (isset($data['email']) && !empty($data['email'])) {
+    $fields_to_update[] = "email = ?";
+    $bind_types .= "s";
+    $bind_values[] = $data['email'];
 }
 
-if (isset($data['last_active_at'])) {
-    $fields_to_update[] = "last_active_at = '" . $data['last_active_at'] . "'";
+// Update password
+if (isset($data['password']) && !empty($data['password'])) {
+    $new_password_hash = password_hash($data['password'], PASSWORD_BCRYPT);
+    $fields_to_update[] = "password_hash = ?";
+    $bind_types .= "s";
+    $bind_values[] = $new_password_hash;
 }
 
+// Update social media links
+if (isset($data['twitter_url'])) {
+    $fields_to_update[] = "twitter_url = ?";
+    $bind_types .= "s";
+    $bind_values[] = $data['twitter_url'];
+}
+if (isset($data['linkedin_url'])) {
+    $fields_to_update[] = "linkedin_url = ?";
+    $bind_types .= "s";
+    $bind_values[] = $data['linkedin_url'];
+}
+if (isset($data['github_url'])) {
+    $fields_to_update[] = "github_url = ?";
+    $bind_types .= "s";
+    $bind_values[] = $data['github_url'];
+}
 
-// If no fields are provided
+// If no fields are provided to update
 if (empty($fields_to_update)) {
     echo json_encode(["message" => "No data to update"]);
     exit();
 }
 
-// Build SQL query
+// Build query
 $update_query = "UPDATE users SET " . implode(", ", $fields_to_update) . " WHERE user_id = ?";
+$bind_types .= "i";
+$bind_values[] = $user_id;
+
 $stmt = $conn->prepare($update_query);
-$stmt->bind_param("i", $user_id);
+$stmt->bind_param($bind_types, ...$bind_values);
 
 // Execute update
 if ($stmt->execute()) {
@@ -53,6 +98,5 @@ if ($stmt->execute()) {
 } else {
     echo json_encode(["message" => "Error updating profile"]);
 }
-
 
 ?>

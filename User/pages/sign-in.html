@@ -33,6 +33,22 @@
             href="../assets/css/soft-ui-dashboard.css?v=1.0.3"
             rel="stylesheet"
         />
+
+        <script>
+            fetch(
+                'http://169.239.251.102:3341/~stanley.ndlovu/UniWebs/backend/users/session_check.php'
+            )
+                .then((response) => response.json())
+                .then((data) => {
+                    if (data.logged_in) {
+                        // Redirect to dashboard if already logged in
+                        window.location.href = 'dashboard.html';
+                    }
+                })
+                .catch((error) =>
+                    console.error('Error checking session:', error)
+                );
+        </script>
     </head>
 
     <body class="">
@@ -156,13 +172,16 @@
                     };
 
                     // Send data using Fetch API (AJAX)
-                    fetch('http://localhost/UniWebs/backend/users/login.php', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(loginData), // Convert data to JSON
-                    })
+                    fetch(
+                        'http://169.239.251.102:3341/~stanley.ndlovu/UniWebs/backend/users/login.php',
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(loginData), // Convert data to JSON
+                        }
+                    )
                         .then((response) => response.json()) // Parse the JSON response
                         .then((data) => {
                             if (data.message === 'Login successful') {
