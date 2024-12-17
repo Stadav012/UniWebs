@@ -1,7 +1,7 @@
 <?php
 
 // get_system_activity.php
-include('../db.php');
+include('../db_connection.php');
 
 $query = "SELECT 
             (SELECT COUNT(*) FROM events) as total_events,

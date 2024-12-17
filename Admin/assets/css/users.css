@@ -1,0 +1,27 @@
+/* Live Map Page Styles */
+.live-map-page {
+    background-color: #f9f9f9;
+    padding: 20px;
+}
+
+.filters {
+    background-color: #ffffff;
+    border: 1px solid #e3e6e9;
+    border-radius: 8px;
+}
+
+#live-map {
+    width: 100%;
+    height: 600px;
+    background-color: #e3e6e9;
+}
+
+/* Form Checkboxes */
+.form-check-label {
+    font-size: 14px;
+    color: #333;
+}
+
+.form-check-input {
+    accent-color: #007bff;
+}

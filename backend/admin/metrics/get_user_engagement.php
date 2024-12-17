@@ -1,7 +1,7 @@
 <?php
 
 // get_user_engagement.php
-include('../db.php');
+include('../db_connection.php');
 
 $query = "SELECT action_type, COUNT(*) as count FROM engagement_logs GROUP BY action_type";
 $result = $conn->query($query);

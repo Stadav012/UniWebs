@@ -1,4 +1,12 @@
 <?php
+
+# CORS
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET");
+header("Content-Type: application/json; charset=UTF-8");
+
+
+
 session_start();
 
 // Check if user is logged in

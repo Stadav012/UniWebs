@@ -1,5 +1,11 @@
 <?php
 
+# CORS
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET");
+header("Content-Type: application/json; charset=UTF-8");
+    
+
 // check-session.php
 session_start();
 

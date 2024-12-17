@@ -1,7 +1,7 @@
 <?php
 
 // get_active_users.php
-include('../db.php');
+include('../db_connection.php');
 
 $query = "
     SELECT COUNT(DISTINCT user_id) as active_users 
